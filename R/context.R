@@ -34,18 +34,20 @@ create_context_manager <- function(
 #'
 #' @export
 with <- function(context, expression) {
-  parent_environment <- parent.frame()
-  enter_result <- do.call(context$on_enter, context$args)
-  on.exit({
+  tryCatch({
+    enter_result <- get_enter_result(context$on_enter, context$args)
+    set_variable_in_environment(context$as, enter_result, parent.frame())
+    eval(expression, parent.frame())
+  },
+  error = context$on_error,
+  finally = {
     context$on_exit(enter_result)
-    remove_variable_from_environment(context$as, parent_environment)
+    remove_variable_from_environment(context$as, parent.frame())
   })
-  set_variable_in_environment(context$as, enter_result, parent_environment)
-  evaluate_expression(
-    substitute(expression),
-    parent_environment,
-    context$on_error
-  )
+}
+
+get_enter_result <- function(on_enter_fun, on_enter_args) {
+  do.call(on_enter_fun, on_enter_args)
 }
 
 set_variable_in_environment <- function(name, value, environment) {
@@ -60,13 +62,18 @@ remove_variable_from_environment <- function(variable, environment) {
   }
 }
 
-evaluate_expression <- function(expression, environment, error_fun) {
-  if (is.function(error_fun)) {
-    tryCatch(eval(expression, environment), error = error_fun)
-  } else {
-    eval(expression, environment)
-  }
-}
+# evaluate_expression <- function(expression, environment) {
+#   eval(expression, environment)
+# }
+#
+
+# evaluate_expression <- function(expression, environment, error_fun) {
+#   if (is.function(error_fun)) {
+#     tryCatch(eval(expression, environment), error = error_fun)
+#   } else {
+#     eval(expression, environment)
+#   }
+# }
 
 #' Open file implementation using a context manager
 #'
