@@ -62,19 +62,6 @@ remove_variable_from_environment <- function(variable, environment) {
   }
 }
 
-# evaluate_expression <- function(expression, environment) {
-#   eval(expression, environment)
-# }
-#
-
-# evaluate_expression <- function(expression, environment, error_fun) {
-#   if (is.function(error_fun)) {
-#     tryCatch(eval(expression, environment), error = error_fun)
-#   } else {
-#     eval(expression, environment)
-#   }
-# }
-
 #' Open file implementation using a context manager
 #'
 #' Similar to Python's `open()`, intended to be used with a context manager.
