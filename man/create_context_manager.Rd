@@ -10,7 +10,6 @@ create_context_manager(
   on_exit = function() {
  },
   on_error = NULL,
-  as = NULL,
   args = NULL
 )
 }
@@ -21,10 +20,10 @@ create_context_manager(
 
 \item{on_error}{optional function to run if an error is thrown}
 
+\item{args}{Optional list of arguments supplied to `on_enter` function.}
+
 \item{as}{Optional character vector specifying variables storing the return
 values of the `on_enter` function.}
-
-\item{args}{Optional list of arguments supplied to `on_enter` function.}
 }
 \value{
 S3 class ContextManager

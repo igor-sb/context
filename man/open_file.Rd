@@ -4,7 +4,7 @@
 \alias{open_file}
 \title{Open file implementation using a context manager}
 \usage{
-open_file(file_name, mode, as)
+open_file(file_name, mode)
 }
 \arguments{
 \item{file_name}{File name to open.}
