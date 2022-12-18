@@ -22,25 +22,28 @@ create_context_manager <- function(
   )
 }
 
+# TO DO: Make %as% optional!
+
 #' Context manager's `with` function
 #'
-#' @param ... ContextAs S3 objects, followed by expression.
+#' @param ... ContextAs S3 objects, followed by an expression.
 #'
 #' @export
 with <- function(...) {
+  args_list <- capture_arguments(...)
+  check_with_args(...)
   eval_environment <- parent.frame()
-  args <- capture_arguments(...)
-  contexts_as <- without_last_element(args) |> eval_list(eval_environment)
-  expr <- get_last_element(args)
+  contexts_as <- without_last_element(args_list) |> eval_list(eval_environment)
+  expr <- get_last_element(args_list)
   tryCatch({
     contexts <- get_from_as(contexts_as, "context")
     as_variables <- get_from_as(contexts_as, "variable")
-    on_enter_results <- get_enter_results(contexts)
-    assign_in_environment(as_variables, on_enter_results, eval_environment)
+    on_enter_returns <- run_on_enter_functions(contexts)
+    assign_in_environment(as_variables, on_enter_returns, eval_environment)
     eval(expr, eval_environment)
   },
   finally = {
-    run_on_exit_functions(contexts, on_enter_results)
+    run_on_exit_functions(contexts, on_enter_returns)
     remove_from_environment(as_variables, eval_environment)
   })
   invisible()
@@ -63,6 +66,11 @@ with <- function(...) {
     ),
     class = "ContextAs"
   )
+}
+
+check_with_args <- function(...) {
+  stopifnot("first argument is not ContextAs S3 object" =
+              inherits(..1, "ContextAs") || inherits(..1, "ContextManager"))
 }
 
 capture_arguments <- function(...) {
@@ -132,6 +140,9 @@ get_from_as <- function(context_as_list, what) {
   )
 }
 
-get_enter_results <- function(contexts) {
-  lapply(contexts, function(context) do.call(context$on_enter, context$args))
+run_on_enter_functions <- function(contexts) {
+  lapply(
+    contexts,
+    function(context) do.call(context$on_enter, context$args)
+  )
 }

@@ -1,6 +1,7 @@
 #' Open file implementation using a context manager
 #'
-#' Similar to Python's `open()`, intended to be used with a context manager.
+#' Similar to Python's `open()`, but creates a ContextManager S3 object.
+#' Intended to be used as a first (left) argument of `%as%`.
 #'
 #' @param file_name File name to open.
 #' @param mode File mode.
@@ -14,4 +15,3 @@ open <- function(file_name, mode = "r") {
     args = list(file_name = file_name, mode = mode)
   )
 }
-
