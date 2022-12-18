@@ -24,44 +24,14 @@ create_context_manager <- function(
 
 #' Context manager's `with` function
 #'
-#' @param data [`ContextAs`] S3 object with elements `context` and `variable`
-#' @param expr Expression or code block to be evaluated within the context
-#' @param ... Unused. Here for consistency with `base::with()`.
+#' @param ... ContextAs S3 objects, followed by expression.
 #'
 #' @export
-with.ContextAs <- function(data, expr, ...) {
+with <- function(...) {
   eval_environment <- parent.frame()
-  with.list(list(data), expr, environment = eval_environment, ...)
-}
-
-#' Context manager's `with` function
-#'
-#' @param data List of `ContextAs` S3 objects.
-#' @param expr Expression or code block to be evaluated within the context
-#' @param ... Unused. Here for consistency with `base::with()`.
-#'
-#' @export
-with.list <- function(data, expr, ...) {
-  eval_environment <- get_calling_environment(...)
-  tryCatch({
-    contexts <- get_from_as(data, "context")
-    as_variables <- get_from_as(data, "variable")
-    on_enter_results <- get_enter_results(contexts)
-    assign_in_environment(as_variables, on_enter_results, eval_environment)
-    eval(expr, eval_environment)
-  },
-  finally = {
-    run_on_exit_functions(contexts, on_enter_results)
-    remove_from_environment(as_variables, eval_environment)
-  })
-  invisible()
-}
-
-with2 <- function(...) {
-  eval_environment <- parent.frame()
-  kwargs <- list(...)
-  contexts_as <- without_last_element(kwargs)
-  expr <- get_last_element(kwargs)
+  args <- capture_arguments(...)
+  contexts_as <- without_last_element(args) |> eval_list(eval_environment)
+  expr <- get_last_element(args)
   tryCatch({
     contexts <- get_from_as(contexts_as, "context")
     as_variables <- get_from_as(contexts_as, "variable")
@@ -76,21 +46,39 @@ with2 <- function(...) {
   invisible()
 }
 
+#' Context manager's `as` function
+#'
+#' @param context Context manager constructor.
+#' @param variable Variable name to use within the context.
+#'
+#' @return ContextAs S3 object  with elements `context` and `variable`.
+#' @export
+`%as%` <- function(context, variables) {
+  variables_symbols <- rlang::ensyms(variables)
+  variables_strings <- sapply(variables_symbols, rlang::as_string)
+  structure(
+    list(
+      context = context,
+      variable = variables_strings
+    ),
+    class = "ContextAs"
+  )
+}
+
+capture_arguments <- function(...) {
+  rlang::enexprs(...)
+}
+
+eval_list <- function(list, envir) {
+  lapply(list, eval, envir = envir)
+}
+
 get_last_element <- function(list) {
   list[[length(list)]]
 }
 
 without_last_element <- function(list) {
   list[-length(list)]
-}
-
-get_calling_environment <- function(...) {
-  keyword_args <- list(...)
-  if ("environment" %in% names(keyword_args)) {
-    keyword_args$environment
-  } else {
-    parent.frame(2)
-  }
 }
 
 run_on_exit_functions <- function(contexts, on_enter_results) {
@@ -146,40 +134,4 @@ get_from_as <- function(context_as_list, what) {
 
 get_enter_results <- function(contexts) {
   lapply(contexts, function(context) do.call(context$on_enter, context$args))
-}
-
-#' Context manager's `as` function
-#'
-#' @param context Context manager constructor.
-#' @param variable Variable name to use within the context.
-#'
-#' @return ContextAs S3 object  with elements `context` and `variable`.
-#' @export
-`%as%` <- function(context, variables) {
-  variables_symbols <- rlang::ensyms(variables)
-  variables_strings <- sapply(variables_symbols, rlang::as_string)
-  structure(
-    list(
-      context = context,
-      variable = variables_strings
-    ),
-    class = "ContextAs"
-  )
-}
-
-#' Open file implementation using a context manager
-#'
-#' Similar to Python's `open()`, intended to be used with a context manager.
-#'
-#' @param file_name File name to open.
-#' @param mode File mode.
-#'
-#' @return S3 class ContextManager
-#' @export
-open <- function(file_name, mode = "r") {
-  create_context_manager(
-    on_enter = function(file_name, mode) file(file_name, open = mode),
-    on_exit = function(file_connection) close(file_connection),
-    args = list(file_name = file_name, mode = mode)
-  )
 }
