@@ -2,6 +2,8 @@
 # context
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/igor-sb/context/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/igor-sb/context/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/igor-sb/context/branch/main/graph/badge.svg)](https://app.codecov.io/gh/igor-sb/context?branch=main)
 <!-- badges: end -->
 
 Context manager package `context` provides a runtime context, like the one in
