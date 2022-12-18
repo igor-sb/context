@@ -15,5 +15,6 @@ open(file_name, mode = "r")
 S3 class ContextManager
 }
 \description{
-Similar to Python's `open()`, intended to be used with a context manager.
+Similar to Python's `open()`, but creates a ContextManager S3 object.
+Intended to be used as a first (left) argument of `%as%`.
 }

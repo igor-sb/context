@@ -2,8 +2,6 @@
 #'
 #' @param on_enter function to run before entering context
 #' @param on_exit function to run after taking actions
-#' @param as Optional character vector specifying variables storing the return
-#'  values of the `on_enter` function.
 #' @param args Optional list of arguments supplied to `on_enter` function.
 #' @return S3 class ContextManager
 #' @export
@@ -52,7 +50,7 @@ with <- function(...) {
 #' Context manager's `as` function
 #'
 #' @param context Context manager constructor.
-#' @param variable Variable name to use within the context.
+#' @param variables Variable name to use within the context.
 #'
 #' @return ContextAs S3 object  with elements `context` and `variable`.
 #' @export

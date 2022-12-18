@@ -7,7 +7,7 @@
 with(...)
 }
 \arguments{
-\item{...}{ContextAs S3 objects, followed by expression.}
+\item{...}{ContextAs S3 objects, followed by an expression.}
 }
 \description{
 Context manager's `with` function

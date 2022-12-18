@@ -9,7 +9,7 @@ context \%as\% variables
 \arguments{
 \item{context}{Context manager constructor.}
 
-\item{variable}{Variable name to use within the context.}
+\item{variables}{Variable name to use within the context.}
 }
 \value{
 ContextAs S3 object  with elements `context` and `variable`.

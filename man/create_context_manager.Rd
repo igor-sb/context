@@ -18,9 +18,6 @@ create_context_manager(
 \item{on_exit}{function to run after taking actions}
 
 \item{args}{Optional list of arguments supplied to `on_enter` function.}
-
-\item{as}{Optional character vector specifying variables storing the return
-values of the `on_enter` function.}
 }
 \value{
 S3 class ContextManager
