@@ -2,7 +2,6 @@
 #'
 #' @param on_enter function to run before entering context
 #' @param on_exit function to run after taking actions
-#' @param on_error optional function to run if an error is thrown
 #' @param as Optional character vector specifying variables storing the return
 #'  values of the `on_enter` function.
 #' @param args Optional list of arguments supplied to `on_enter` function.
@@ -11,14 +10,12 @@
 create_context_manager <- function(
     on_enter = function() {},
     on_exit = function() {},
-    on_error = NULL,
     args = NULL
 ) {
   structure(
     list(
       on_enter = on_enter,
       on_exit = on_exit,
-      on_error = on_error,
       args = args
     ),
     class = "ContextManager"
@@ -33,55 +30,122 @@ create_context_manager <- function(
 #'
 #' @export
 with.ContextAs <- function(data, expr, ...) {
-  keyword_args <- list(...)
-  eval_environment <- if ("environment" %in% names(keyword_args)) {
-    keyword_args$environment
-  } else {
-    parent.frame()
-  }
-  context <- data$context
-  as_variable <- data$variable
-  tryCatch({
-    enter_result <- get_enter_result(context$on_enter, context$args)
-    set_variable_in_environment(as_variable, enter_result, eval_environment)
-    eval(expr, eval_environment)
-  },
-  error = context$on_error,
-  finally = {
-    context$on_exit(enter_result)
-    remove_variable_from_environment(as_variable, eval_environment)
-  })
+  eval_environment <- parent.frame()
+  with.list(list(data), expr, environment = eval_environment, ...)
 }
 
-# This won't work. This will evaluate expr in each list element separately
+#' Context manager's `with` function
+#'
+#' @param data List of `ContextAs` S3 objects.
+#' @param expr Expression or code block to be evaluated within the context
+#' @param ... Unused. Here for consistency with `base::with()`.
+#'
+#' @export
 with.list <- function(data, expr, ...) {
-  # Run tryCatch by vectorizing set_variable_in_environment
-  #  get_enver_result
-  #  remove_variable_from_environment
-  #
-  calling_environment <- parent.frame()
-  invisible(lapply(
-    data,
-    with.ContextAs,
-    expr = expr,
-    environment = calling_environment
+  eval_environment <- get_calling_environment(...)
+  tryCatch({
+    contexts <- get_from_as(data, "context")
+    as_variables <- get_from_as(data, "variable")
+    on_enter_results <- get_enter_results(contexts)
+    assign_in_environment(as_variables, on_enter_results, eval_environment)
+    eval(expr, eval_environment)
+  },
+  finally = {
+    run_on_exit_functions(contexts, on_enter_results)
+    remove_from_environment(as_variables, eval_environment)
+  })
+  invisible()
+}
+
+with2 <- function(...) {
+  eval_environment <- parent.frame()
+  kwargs <- list(...)
+  contexts_as <- without_last_element(kwargs)
+  expr <- get_last_element(kwargs)
+  tryCatch({
+    contexts <- get_from_as(contexts_as, "context")
+    as_variables <- get_from_as(contexts_as, "variable")
+    on_enter_results <- get_enter_results(contexts)
+    assign_in_environment(as_variables, on_enter_results, eval_environment)
+    eval(expr, eval_environment)
+  },
+  finally = {
+    run_on_exit_functions(contexts, on_enter_results)
+    remove_from_environment(as_variables, eval_environment)
+  })
+  invisible()
+}
+
+get_last_element <- function(list) {
+  list[[length(list)]]
+}
+
+without_last_element <- function(list) {
+  list[-length(list)]
+}
+
+get_calling_environment <- function(...) {
+  keyword_args <- list(...)
+  if ("environment" %in% names(keyword_args)) {
+    keyword_args$environment
+  } else {
+    parent.frame(2)
+  }
+}
+
+run_on_exit_functions <- function(contexts, on_enter_results) {
+  multi_apply(
+    function(context, on_enter_result) {
+      context$on_exit(on_enter_result)
+    },
+    contexts,
+    on_enter_results
+  )
+}
+
+multi_apply <- function(fun, ...) {
+  invisible(mapply(
+    fun,
+    ...,
+    SIMPLIFY = FALSE,
+    USE.NAMES = FALSE
   ))
 }
 
-get_enter_result <- function(on_enter_fun, on_enter_args) {
-  do.call(on_enter_fun, on_enter_args)
-}
-
-set_variable_in_environment <- function(name, value, environment) {
-  if (!is.null(value)) {
-    assign(name, value, envir = environment)
+remove_from_environment <- function(variable_names, environment) {
+  for (variable_name in variable_names) {
+    if (exists(variable_name, envir = environment)) {
+      do.call("rm", list(x = variable_name, envir = environment))
+    }
   }
 }
 
-remove_variable_from_environment <- function(variable, environment) {
-  if (exists(variable, envir = environment)) {
-    do.call("rm", list(x = variable, envir = environment))
-  }
+assign_in_environment <- function(
+    variable_names,
+    variable_values,
+    environment
+) {
+  multi_apply(
+    function(name, value, environment) {
+      if (!is.null(value)) {
+        assign(name, value, envir = environment)
+      }
+    },
+    variable_names,
+    variable_values,
+    MoreArgs = list(environment = environment)
+  )
+}
+
+get_from_as <- function(context_as_list, what) {
+  lapply(
+    context_as_list,
+    function(context_as) context_as[[what]]
+  )
+}
+
+get_enter_results <- function(contexts) {
+  lapply(contexts, function(context) do.call(context$on_enter, context$args))
 }
 
 #' Context manager's `as` function
@@ -89,7 +153,7 @@ remove_variable_from_environment <- function(variable, environment) {
 #' @param context Context manager constructor.
 #' @param variable Variable name to use within the context.
 #'
-#' @return List with elements `context` and `variable`.
+#' @return ContextAs S3 object  with elements `context` and `variable`.
 #' @export
 `%as%` <- function(context, variables) {
   variables_symbols <- rlang::ensyms(variables)
@@ -109,17 +173,13 @@ remove_variable_from_environment <- function(variable, environment) {
 #'
 #' @param file_name File name to open.
 #' @param mode File mode.
-#' @param as Character specifying the name of the variable.
 #'
 #' @return S3 class ContextManager
 #' @export
-open_file <- function(file_name, mode) {
+open <- function(file_name, mode = "r") {
   create_context_manager(
     on_enter = function(file_name, mode) file(file_name, open = mode),
     on_exit = function(file_connection) close(file_connection),
-    on_error = NULL,
     args = list(file_name = file_name, mode = mode)
   )
 }
-
-# Multiple: Vectorize open_file and %as% ?

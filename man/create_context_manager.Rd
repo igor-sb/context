@@ -9,7 +9,6 @@ create_context_manager(
  },
   on_exit = function() {
  },
-  on_error = NULL,
   args = NULL
 )
 }
@@ -17,8 +16,6 @@ create_context_manager(
 \item{on_enter}{function to run before entering context}
 
 \item{on_exit}{function to run after taking actions}
-
-\item{on_error}{optional function to run if an error is thrown}
 
 \item{args}{Optional list of arguments supplied to `on_enter` function.}
 
