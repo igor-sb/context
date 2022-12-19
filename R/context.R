@@ -6,10 +6,14 @@
 #' @return S3 class ContextManager
 #' @export
 create_context_manager <- function(
-    on_enter = function() {},
-    on_exit = function() {},
+    on_enter,
+    on_exit,
     args = NULL
 ) {
+  stopifnot(
+    "on_enter is not a function" = is.function(on_enter),
+    "on_exit is not a function" = is.function(on_exit)
+  )
   structure(
     list(
       on_enter = on_enter,
@@ -66,8 +70,26 @@ with <- function(...) {
   )
 }
 
+#' Open file implementation using a context manager
+#'
+#' Similar to Python's `open()`, but creates a ContextManager S3 object.
+#' Intended to be used as a first (left) argument of `%as%`.
+#'
+#' @param file_name File name to open.
+#' @param mode File mode.
+#'
+#' @return S3 class ContextManager
+#' @export
+open <- function(file_name, mode = "r") {
+  create_context_manager(
+    on_enter = function(file_name, mode) file(file_name, open = mode),
+    on_exit = function(file_connection) close(file_connection),
+    args = list(file_name = file_name, mode = mode)
+  )
+}
+
 check_with_args <- function(...) {
-  stopifnot("first argument is not ContextAs S3 object" =
+  stopifnot("first argument is not ContextAs or ContextManager S3 object" =
               inherits(..1, "ContextAs") || inherits(..1, "ContextManager"))
 }
 
