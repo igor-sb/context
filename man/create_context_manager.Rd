@@ -4,13 +4,7 @@
 \alias{create_context_manager}
 \title{Context manager}
 \usage{
-create_context_manager(
-  on_enter = function() {
- },
-  on_exit = function() {
- },
-  args = NULL
-)
+create_context_manager(on_enter, on_exit, args = NULL)
 }
 \arguments{
 \item{on_enter}{function to run before entering context}

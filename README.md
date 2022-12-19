@@ -1,67 +1,72 @@
-
 # context
 
 <!-- badges: start -->
+
 [![R-CMD-check](https://github.com/igor-sb/context/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/igor-sb/context/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/igor-sb/context/branch/main/graph/badge.svg)](https://app.codecov.io/gh/igor-sb/context?branch=main)
+[![Codecov test
+coverage](https://codecov.io/gh/igor-sb/context/branch/main/graph/badge.svg)](https://app.codecov.io/gh/igor-sb/context?branch=main)
+
 <!-- badges: end -->
 
-Context manager package `context` provides a runtime context, like the one in
-Python:
+Context manager is used to create a context: a code block that runs in the
+current R environment, where another object is temporarily created and safely
+destroyed after the code block finishes running or throws an error. A common use
+is to open a file, do stuff with it, then close the file connection. For
+example:
 
-```r
+``` r
 library(context)
 
 with(open(filename) %as% f, {
-  do_stuff(f)
+  x <- do_stuff(f)
 })
+
+do_stuff2(x)
 ```
 
-This creates a connection and binds it to the variable `f` in the current
-environment. This is equivalent to the Python code:
+is equivalent to this common Python code:
 
-```py
+``` py
 with open(filename) as f:
-  do_stuff(f)
+  x = do_stuff(f)
+  
+do_stuff2(x)
 ```
 
 ## How?
 
 ContextManager S3 object is created using `create_context_manager()` function,
 which takes 3 arguments:
-* `on_enter`: function to evaluate on entering context. Return value of this
-  function is stored in the variable on the right side of the `%as%` operator.
-* `on_exit`: function to evaluate on exiting context.
-* `args`: arguments passed on the `on_enter` function.
 
-This can be use to create custom context managers, for example:
+-   `on_enter`: function to evaluate before code block. Return value of this
+    function is stored in the variable on the right side of the `%as%` operator.
 
-```r
-open_custom <- function(file_name, mode = "r") {
-  create_context_manager(
-    on_enter = function(file_name, mode) open_file(file_name, open = mode),
-    on_exit = function(file_connection) close(file_connection),
-    args = list(file_name = file_name, mode = mode)
-  )
-}
+-   `on_exit`: function to evaluate after code block completes or stops.
 
-```
+-   `args`: arguments passed on the `on_enter` function.
+
+This can be use to create custom context managers.
+
+## Alternative `with`s
+
+Base R function `base::with` functions differently: it creates a new environment
+and has no support for setup and teardown code. Even its own documentation
+discourages its use.
+
+`context::with` is much more similiar to `withr::with_*` functions from the
+[withr package](https://withr.r-lib.org/): they both have the setup and teardown
+code. However, `withr::with_*` functions:
+
+-   run the code block in their own environment
+-   have a somewhat different purpose (to run code under modified global state),
+    so I find them clunky to use for this purpose
 
 ## Installation
 
-You can install the development version of context from [GitHub](https://github.com/) with:
+You can install the development version of context from
+[GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
 devtools::install_github("igor-sb/context")
 ```
-
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(context)
-## basic example code
-```
-
