@@ -62,7 +62,7 @@ with <- function(...) {
 }
 
 #' @export
-`%as%.ContextManager` <- function(context, variables) {
+`%as%.ContextManager` <- function(context, variables) { # nolint
   variables_symbols <- rlang::ensyms(variables)
   variables_strings <- sapply(variables_symbols, rlang::as_string)
   structure(
@@ -75,7 +75,7 @@ with <- function(...) {
 }
 
 #' @export
-`%as%.default` <- function(context, variables) {
+`%as%.default` <- function(context, variables) { # nolint
   variable_name <- rlang::enexpr(variables) |> as.character()
   assign(variable_name, context, envir = parent.frame())
   !is_end_of_file(context) && !is.null(context)

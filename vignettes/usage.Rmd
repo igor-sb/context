@@ -33,7 +33,7 @@ writeLines(as.character(1:5), temp_file)
 numbers <- c()
 
 with(open(temp_file) %as% f, {
-  while(read_line(f) %as% line) {
+  while (read_line(f) %as% line) {
     numbers <- c(numbers, as.integer(line))
   }
 })
@@ -79,11 +79,10 @@ Then we can iterate over a fastq file:
 fastq_file <- read_test_fastq()
 blocks <- list()
 with(fastq_open(fastq_file) %as% fq, {
-  while(read_block(fq) %as% block) {
+  while (read_block(fq) %as% block) {
     blocks <- c(blocks, ShortRead::sread(block))
   }
 })
 
 print(blocks)
-
 ```
