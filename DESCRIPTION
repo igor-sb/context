@@ -19,3 +19,4 @@ Suggests:
     withr (>= 2.5.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
+URL: https://igor-sb.github.io/context/

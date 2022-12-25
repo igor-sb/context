@@ -4,3 +4,6 @@
 ^\.github$
 ^codecov\.yml$
 ^\.lintr$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
