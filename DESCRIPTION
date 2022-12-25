@@ -15,7 +15,6 @@ Suggests:
     covr (>= 3.0.0),
     knitr,
     rmarkdown,
-    ShortRead (>= 1.54.0),
     testthat (>= 3.0.0),
     withr (>= 2.5.0)
 Config/testthat/edition: 3
