@@ -4,25 +4,12 @@
 \alias{create_context_manager}
 \title{Context manager}
 \usage{
-create_context_manager(
-  on_enter = function() {
- },
-  on_exit = function() {
- },
-  on_error = NULL,
-  as = NULL,
-  args = NULL
-)
+create_context_manager(on_enter, on_exit, args = NULL)
 }
 \arguments{
 \item{on_enter}{function to run before entering context}
 
 \item{on_exit}{function to run after taking actions}
-
-\item{on_error}{optional function to run if an error is thrown}
-
-\item{as}{Optional character vector specifying variables storing the return
-values of the `on_enter` function.}
 
 \item{args}{Optional list of arguments supplied to `on_enter` function.}
 }

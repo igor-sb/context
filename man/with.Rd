@@ -4,12 +4,10 @@
 \alias{with}
 \title{Context manager's `with` function}
 \usage{
-with(context, expression)
+with(...)
 }
 \arguments{
-\item{context}{[`ContextManager`] object}
-
-\item{expression}{Expression or code block to be evaluated within the context}
+\item{...}{ContextAs S3 objects, followed by an expression.}
 }
 \description{
 Context manager's `with` function
