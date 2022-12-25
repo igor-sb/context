@@ -1,0 +1,89 @@
+---
+title: "How to use context"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{How to use context}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(context)
+```
+
+## Basic usage
+
+Usage will be familiar to anyone that used Pythons `with-as` context manager.
+For example, to iterate file line by line, run a function on a line, then do
+something with the result:
+
+```{r}
+
+# Add numbers 1, 2, 3, 4, 5 to a file
+set.seed(42)
+temp_file <- tempfile()
+writeLines(as.character(1:5), temp_file)
+numbers <- c()
+
+with(open(temp_file) %as% f, {
+  while(read_line(f) %as% line) {
+    numbers <- c(numbers, as.integer(line))
+  }
+})
+
+cat("Sum of the numbers is: ", sum(numbers), "\n")
+file.remove(temp_file) |> invisible()
+
+```
+
+In addition to the `with` context creation, `%as%` can be used to store the
+value of the expression on its left side to the variable name on its right side.
+When used in this manner, this type of assignment returns `FALSE` only when the
+end of the is reached, that is when the length of the return value is zero. This
+is useful when iterating through files in chunks; for example line by line or
+block-by-block as is the case for example with `ShortRead::FastqStreamer()`.
+
+## Setting up custom context managers
+
+### Example: block-by-block reading of fastq files
+
+Define `on_enter` and `on_exit` functions:
+
+```{r}
+fastq_open <- function(file_name, n = 1e6) {
+  create_context_manager(
+    on_enter = function(file_name, n) ShortRead::FastqStreamer(file_name, n),
+    on_exit = function(file_connection) close(file_connection),
+    args = list(file_name = file_name, n = n)
+  )
+}
+```
+
+and a function to move the iterator each time a block is read:
+
+```{r}
+read_block <- function(file_connection) {
+  ShortRead::yield(file_connection)
+}
+```
+
+Then we can iterate over a fastq file:
+```{r}
+fastq_file <- read_test_fastq()
+blocks <- list()
+with(fastq_open(fastq_file) %as% fq, {
+  while(read_block(fq) %as% block) {
+    blocks <- c(blocks, ShortRead::sread(block))
+  }
+})
+
+print(blocks)
+
+```

@@ -24,8 +24,6 @@ create_context_manager <- function(
   )
 }
 
-# TO DO: Make %as% optional!
-
 #' Context manager's `with` function
 #'
 #' @param ... ContextAs S3 objects, followed by an expression.
@@ -41,24 +39,30 @@ with <- function(...) {
     contexts <- get_from_as(contexts_as, "context")
     as_variables <- get_from_as(contexts_as, "variable")
     on_enter_returns <- run_on_enter_functions(contexts)
-    assign_in_environment(as_variables, on_enter_returns, eval_environment)
+    assign_all_in_environment(as_variables, on_enter_returns, eval_environment)
     eval(expr, eval_environment)
   },
   finally = {
     run_on_exit_functions(contexts, on_enter_returns)
-    remove_from_environment(as_variables, eval_environment)
+    remove_all_from_environment(as_variables, eval_environment)
   })
   invisible()
 }
 
 #' Context manager's `as` function
 #'
-#' @param context Context manager constructor.
-#' @param variables Variable name to use within the context.
+#' @param context ContextManager S3 class or a character string.
+#' @param variables Variable name to use within the context or a variable name
+#'  in which to store the `context` if it is not a ContextManager S3 class.
 #'
 #' @return ContextAs S3 object  with elements `context` and `variable`.
 #' @export
 `%as%` <- function(context, variables) {
+  UseMethod("%as%")
+}
+
+#' @export
+`%as%.ContextManager` <- function(context, variables) {
   variables_symbols <- rlang::ensyms(variables)
   variables_strings <- sapply(variables_symbols, rlang::as_string)
   structure(
@@ -70,10 +74,18 @@ with <- function(...) {
   )
 }
 
+#' @export
+`%as%.default` <- function(context, variables) {
+  variable_name <- rlang::enexpr(variables) |> as.character()
+  assign(variable_name, context, envir = parent.frame())
+  !is_end_of_file(context) && !is.null(context)
+}
+
 #' Open file implementation using a context manager
 #'
 #' Similar to Python's `open()`, but creates a ContextManager S3 object.
-#' Intended to be used as a first (left) argument of `%as%`.
+#' Intended to be used as a first (left) argument of `%as%`, or as any but last
+#' argument of `context::with()`.
 #'
 #' @param file_name File name to open.
 #' @param mode File mode.
@@ -88,8 +100,22 @@ open <- function(file_name, mode = "r") {
   )
 }
 
+#' Read a single line from file connectoin
+#'
+#' @param connection File connection.
+#'
+#' @return Character string of one line in a file.
+#' @export
+read_line <- function(connection) {
+  readLines(connection, n = 1)
+}
+
+is_end_of_file <- function(line) {
+  length(line) == 0
+}
+
 check_with_args <- function(...) {
-  stopifnot("first argument is not ContextAs or ContextManager S3 object" =
+  stopifnot("first argument is not ContextAs S3 object" =
               inherits(..1, "ContextAs") || inherits(..1, "ContextManager"))
 }
 
@@ -128,15 +154,19 @@ multi_apply <- function(fun, ...) {
   ))
 }
 
-remove_from_environment <- function(variable_names, environment) {
+remove_all_from_environment <- function(variable_names, environment) {
   for (variable_name in variable_names) {
     if (exists(variable_name, envir = environment)) {
-      do.call("rm", list(x = variable_name, envir = environment))
+      remove_from_environment(variable_name, environment)
     }
   }
 }
 
-assign_in_environment <- function(
+remove_from_environment <- function(variable_name, environment) {
+  do.call("rm", list(x = variable_name, envir = environment))
+}
+
+assign_all_in_environment <- function(
     variable_names,
     variable_values,
     environment
@@ -153,7 +183,11 @@ assign_in_environment <- function(
   )
 }
 
-get_from_as <- function(context_as_list, what) {
+get_from_as <- function(...) {
+  UseMethod("get_from_as")
+}
+
+get_from_as.list <- function(context_as_list, what) {
   lapply(
     context_as_list,
     function(context_as) context_as[[what]]
@@ -165,4 +199,12 @@ run_on_enter_functions <- function(contexts) {
     contexts,
     function(context) do.call(context$on_enter, context$args)
   )
+}
+
+#' Path to a small simulated fastq file
+#'
+#' @return A character vector with the file path.
+#' @export
+read_test_fastq <- function() {
+  system.file("extdata", "test.fastq", package = "context")
 }

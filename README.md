@@ -24,7 +24,7 @@ with(open(filename) %as% f, {
 do_stuff2(x)
 ```
 
-is equivalent to this common Python code:
+is equivalent to this Python code:
 
 ``` py
 with open(filename) as f:
@@ -33,7 +33,7 @@ with open(filename) as f:
 do_stuff2(x)
 ```
 
-## How?
+## Implementation
 
 ContextManager S3 object is created using `create_context_manager()` function,
 which takes 3 arguments:
@@ -51,15 +51,17 @@ This can be use to create custom context managers.
 
 Base R function `base::with` functions differently: it creates a new environment
 and has no support for setup and teardown code. Even its own documentation
-discourages its use.
+discourages its use (!).
 
 `context::with` is much more similiar to `withr::with_*` functions from the
-[withr package](https://withr.r-lib.org/): they both have the setup and teardown
-code. However, `withr::with_*` functions:
-
--   run the code block in their own environment
--   have a somewhat different purpose (to run code under modified global state),
-    so I find them clunky to use for this purpose
+[withr package](https://withr.r-lib.org/) in that they both have the setup and
+teardown code. However, `withr::with_*` functions run the code block in their
+own environment and have a somewhat different purpose, which is to run code
+under modified global state. I find them clunky and inflexible to use for this
+purpose. For example, to modify a current environment variable, one needs even
+more code wrapping it (hence the motivation for this package) or use the `<<-`
+assignment operator (which sometimes binds a variable to a parent, and sometimes
+to a global environment).
 
 ## Installation
 

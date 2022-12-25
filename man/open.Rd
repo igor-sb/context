@@ -16,5 +16,6 @@ S3 class ContextManager
 }
 \description{
 Similar to Python's `open()`, but creates a ContextManager S3 object.
-Intended to be used as a first (left) argument of `%as%`.
+Intended to be used as a first (left) argument of `%as%`, or as any but last
+argument of `context::with()`.
 }

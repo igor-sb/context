@@ -4,7 +4,7 @@ Title: Context manager for R
 Version: 1.0
 Author: Igor Segota
 Maintainer: Igor Segota <is246@cornell.edu>
-Description: A simple Context manager, based on the functionality from Python.
+Description: A simple Context manager reproducing Python's with-as functionality.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -12,7 +12,11 @@ RoxygenNote: 7.2.1
 Imports:
     rlang (>= 1.0.0)
 Suggests: 
-    covr,
+    covr (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    ShortRead (>= 1.54.0),
     testthat (>= 3.0.0),
     withr (>= 2.5.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

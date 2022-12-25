@@ -7,9 +7,10 @@
 context \%as\% variables
 }
 \arguments{
-\item{context}{Context manager constructor.}
+\item{context}{ContextManager S3 class or a character string.}
 
-\item{variables}{Variable name to use within the context.}
+\item{variables}{Variable name to use within the context or a variable name
+in which to store the `context` if it is not a ContextManager S3 class.}
 }
 \value{
 ContextAs S3 object  with elements `context` and `variable`.

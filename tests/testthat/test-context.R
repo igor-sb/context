@@ -35,5 +35,5 @@ test_that("create_context_manager checks:", {
 
 test_that("with-as invalid syntax:", {
   expect_error(with("2", 1),
-               "first argument is not ContextAs or ContextManager S3 object")
+               "first argument is not ContextAs S3 object")
 })
