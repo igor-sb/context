@@ -79,7 +79,7 @@ to a global environment).
 
 Define `on_enter` and `on_exit` functions:
 
-```{r}
+``` r
 fastq_open <- function(file_name, n = 1e6) {
   create_context_manager(
     on_enter = function(file_name, n) ShortRead::FastqStreamer(file_name, n),
@@ -91,7 +91,7 @@ fastq_open <- function(file_name, n = 1e6) {
 
 and a function to move the iterator each time a block is read:
 
-```{r}
+``` r
 read_block <- function(file_connection) {
   ShortRead::yield(file_connection)
 }
@@ -99,7 +99,7 @@ read_block <- function(file_connection) {
 
 Then we can iterate over a fastq file:
 
-```{r}
+``` r
 fastq_file <- read_test_fastq()
 blocks <- list()
 with(fastq_open(fastq_file) %as% fq, {
