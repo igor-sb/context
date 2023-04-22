@@ -100,7 +100,7 @@ read_block <- function(file_connection) {
 Then we can iterate over a fastq file:
 
 ``` r
-fastq_file <- read_test_fastq()
+fastq_file <- system.file("extdata", "test.fastq", package = "context")
 blocks <- list()
 with(fastq_open(fastq_file) %as% fq, {
   while (read_block(fq) %as% block) {

@@ -1,10 +1,14 @@
 Package: context
 Type: Package
-Title: Context manager for R
+Title: Wrap Code Block Execution With Automatic Setup and Teardown
 Version: 1.0
 Author: Igor Segota
 Maintainer: Igor Segota <is246@cornell.edu>
-Description: A simple Context manager reproducing Python's with-as functionality.
+Description: This package provides an implementation of context managers for
+    managing resources in R. Context managers are a useful tool for ensuring
+    that resources such as files, network connections, or database connections
+    are properly managed, by automating their setup and teardown, even in the
+    event of errors or exceptions.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

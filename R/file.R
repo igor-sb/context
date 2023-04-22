@@ -30,11 +30,3 @@ read_line <- function(connection) {
 is_end_of_file <- function(line) {
   length(line) == 0
 }
-
-#' Path to a small simulated fastq file
-#'
-#' @return A character vector with the file path.
-#' @export
-read_test_fastq <- function() {
-  system.file("extdata", "test.fastq", package = "context")
-}
